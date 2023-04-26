@@ -1,0 +1,24 @@
+{
+  "name": "event-listeners",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "play": "nodemon -e ts -w . -x tsx src/playground.ts"
+  },
+  "author": "Jakub Jereczek",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^2.7.1",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.8.3"
+  },
+  "dependencies": {
+    "nodemon": "^2.0.19",
+    "tsx": "^3.9.0"
+  }
+}
