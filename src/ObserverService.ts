@@ -1,8 +1,12 @@
-import { IEvent, IEventDictionary, IEventParams } from 'types/Event';
+import {
+  EventDictionary,
+  EventListenersDictionary,
+  EventParams,
+} from 'types/Event';
 import { InferZod } from 'types/Zod';
 
-class ObserverService<E extends IEvent> {
-  listeners: IEventDictionary<IEvent>;
+class ObserverService<E extends EventDictionary> {
+  listeners: EventListenersDictionary<EventDictionary>;
 
   constructor(events: E) {
     this.listeners = this.mapEventDictionary(events);
@@ -21,12 +25,12 @@ class ObserverService<E extends IEvent> {
 
   subscribe<N extends keyof E>(
     eventName: N,
-    listener: (args: InferZod<IEventParams<E[N]>>) => void,
+    listener: (args: InferZod<EventParams<E[N]>>) => void,
   ) {
     this.listeners[eventName].listeners.push(listener);
   }
 
-  emit<N extends keyof E>(eventName: N, args: InferZod<IEventParams<E[N]>>) {
+  emit<N extends keyof E>(eventName: N, args: InferZod<EventParams<E[N]>>) {
     if (this.listeners[eventName]) {
       this.listeners[eventName].listeners.forEach(
         (listener: (...args: any) => void) => listener(args),
@@ -36,7 +40,7 @@ class ObserverService<E extends IEvent> {
 
   unsubscribe<N extends keyof E>(
     eventName: N,
-    listener: (args: IEventParams<E[N]>) => void,
+    listener: (args: EventParams<E[N]>) => void,
   ) {
     if (this.listeners[eventName]) {
       const index = this.listeners[eventName].listeners.indexOf(listener);

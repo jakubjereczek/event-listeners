@@ -1,20 +1,20 @@
 import { ZodTypeAny } from 'zod';
 
-type IEvent<T = any, K = any> = {
-  [Name in keyof T]: {
-    [Arg in keyof K]: ZodTypeAny;
+type EventDictionary<T = any, K = any> = {
+  [N in keyof T]: {
+    [A in keyof K]: ZodTypeAny;
   };
 };
 
-type IEventParams<T extends IEvent[number]> = T;
+type EventParams<T extends EventDictionary[number]> = T;
 
-type IEventDictionary<T = any> = {
-  [Event in keyof T]: {
+type EventListenersDictionary<T = any> = {
+  [E in keyof T]: {
     listeners: ((...args: any) => void)[];
     args: {
-      [Arg in keyof Event]: any;
+      [A in keyof E]: ZodTypeAny;
     };
   };
 };
 
-export { IEvent, IEventParams, IEventDictionary };
+export { EventDictionary, EventParams, EventListenersDictionary };
