@@ -1,5 +1,5 @@
-import { z } from "zod";
-import ObserverService from "@/ObserverService";
+import { z } from 'zod';
+import ObserverService from 'ObserverService';
 
 const observerService = new ObserverService({
   event: {
@@ -11,13 +11,13 @@ const observerService = new ObserverService({
   },
 });
 
-observerService.subscribe("event", ({ arg1, arg2 }) => {
-  console.log("event subscribe", { arg1, arg2 });
+observerService.subscribe('event', ({ arg1, arg2 }) => {
+  console.log('event subscribe', { arg1, arg2 });
 });
 
-observerService.emit("event", { arg1: "wrng", arg2: 1 });
-observerService.emit("event2", {
+observerService.emit('event', { arg1: 'wrng', arg2: 1 });
+observerService.emit('event2', {
   arg3: {
-    arg4: "string",
+    arg4: 'string',
   },
 });

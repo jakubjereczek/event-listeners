@@ -2,10 +2,10 @@ import {
   EventDictionary,
   EventListenersDictionary,
   EventParams,
-} from "@/types/Event";
-import { InferZod } from "@/types/Zod";
-import ZodValidator from "@/utils/zod";
-import ZodValidationError from "@/errors/ZodValidationError";
+} from 'types/Event';
+import { InferZod } from 'types/Zod';
+import ZodValidator from 'utils/zod';
+import ZodValidationError from 'errors/ZodValidationError';
 
 class ObserverService<E extends EventDictionary> {
   listeners: EventListenersDictionary<EventDictionary>;
@@ -27,7 +27,7 @@ class ObserverService<E extends EventDictionary> {
 
   private validateEventArgs<N extends keyof E>(
     eventName: N,
-    args: InferZod<EventParams<E[N]>>
+    args: InferZod<EventParams<E[N]>>,
   ) {
     if (this.listeners[eventName]) {
       const { args: patterns } = this.listeners[eventName];
@@ -42,7 +42,7 @@ class ObserverService<E extends EventDictionary> {
 
   subscribe<N extends keyof E>(
     eventName: N,
-    listener: (args: InferZod<EventParams<E[N]>>) => void
+    listener: (args: InferZod<EventParams<E[N]>>) => void,
   ) {
     this.listeners[eventName].listeners.push(listener);
   }
@@ -51,14 +51,14 @@ class ObserverService<E extends EventDictionary> {
     if (this.listeners[eventName]) {
       this.validateEventArgs(eventName, args);
       this.listeners[eventName].listeners.forEach(
-        (listener: (...args: any) => void) => listener(args)
+        (listener: (...args: any) => void) => listener(args),
       );
     }
   }
 
   unsubscribe<N extends keyof E>(
     eventName: N,
-    listener: (args: EventParams<E[N]>) => void
+    listener: (args: EventParams<E[N]>) => void,
   ) {
     if (this.listeners[eventName]) {
       const index = this.listeners[eventName].listeners.indexOf(listener);
