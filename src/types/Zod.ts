@@ -1,4 +1,4 @@
-import { ZodError, ZodType, ZodTypeAny } from "zod";
+import { ZodError, ZodType, ZodTypeAny } from 'zod';
 
 type ZodAnyDictionary = {
   [x: string]: ZodTypeAny;
@@ -6,7 +6,7 @@ type ZodAnyDictionary = {
 
 type InferZod<T extends { [x: string]: ZodTypeAny }> = {
   [P in keyof T]: T[P] extends ZodType<any, any, any>
-    ? ReturnType<(arg: T[P]) => T[P]["_output"]>
+    ? ReturnType<(arg: T[P]) => T[P]['_output']>
     : unknown;
 };
 
@@ -15,16 +15,33 @@ type ZodValidationBase = {
   argName: string;
 };
 
+enum ZodValidationStatus {
+  Succeed,
+  Failed,
+}
+
 type ZodValidationSucceeded = ZodValidationBase & {
-  success: true;
+  status: ZodValidationStatus.Succeed;
   error: undefined;
 };
 
 type ZodValidationFailed = ZodValidationBase & {
-  success: false;
-  error: ZodError;
+  status: ZodValidationStatus.Failed;
+  error: ZodError<unknown>;
 };
 
 type ZodValidation = ZodValidationSucceeded | ZodValidationFailed;
 
-export type { ZodAnyDictionary, InferZod, ZodValidation, ZodValidationFailed };
+type ZodValidationResult = ZodValidationBase & {
+  message: string;
+};
+
+export type {
+  ZodAnyDictionary,
+  InferZod,
+  ZodValidation,
+  ZodValidationResult,
+  ZodValidationFailed,
+};
+
+export { ZodValidationStatus };

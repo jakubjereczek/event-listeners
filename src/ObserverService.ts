@@ -29,14 +29,14 @@ class ObserverService<E extends EventDictionary> {
     eventName: N,
     args: InferZod<EventParams<E[N]>>,
   ) {
-    if (this.listeners[eventName]) {
-      const { args: patterns } = this.listeners[eventName];
+    const listener = this.listeners[eventName];
+    const patterns = listener.args;
+    if (listener) {
       const result = new ZodValidator().validate(patterns, args);
 
-      if (result.success) {
-        return true;
+      if (!result.success) {
+        throw new ZodValidationError(eventName, result.errors);
       }
-      throw new ZodValidationError(eventName, result.messages);
     }
   }
 

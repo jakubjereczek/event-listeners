@@ -1,37 +1,61 @@
-import { ZodIssue } from "zod";
-import { ZodAnyDictionary, ZodValidation } from "@/types/Zod";
-import { Dictionary } from "@/types/Object";
+import { ZodIssue } from 'zod';
+import {
+  ZodAnyDictionary,
+  ZodValidation,
+  ZodValidationResult,
+  ZodValidationStatus,
+} from 'types/Zod';
+import { Dictionary } from 'types/Object';
 
 class ZodValidator {
   constructor() {}
 
-  formatErrorMessages({ path, message }: ZodIssue): string {
-    return `${path.join(".")} ${message}`;
+  private formatIssue({ path, message }: ZodIssue): string {
+    return `${path.join('.')} ${message}`;
   }
 
-  hasValidationErrors(results: ZodValidation[]): boolean {
-    return this.filterValidationErrors(results).length > 0;
+  private formatIssues = (issues: ZodIssue[]) => {
+    const messages = issues.map((issue) => this.formatIssue(issue));
+
+    return messages.join(', ');
+  };
+
+  private hasErrors(results: ZodValidation[]): boolean {
+    return this.getValidationErrors(results).length > 0;
   }
 
-  filterValidationErrors(results: ZodValidation[]): ZodValidation[] {
-    return results.filter((result) => !result.success);
+  private getValidationErrors(results: ZodValidation[]): ZodValidation[] {
+    return results.filter(
+      (result) => result.status === ZodValidationStatus.Failed,
+    );
   }
 
-  validateArgs<T extends ZodAnyDictionary>(
+  private getValidationResults<T extends ZodAnyDictionary>(
     patterns: T,
-    params: Dictionary<any>
+    params: Dictionary<any>,
   ): ZodValidation[] {
     const validationResults: ZodValidation[] = [];
 
     for (const [arg, pattern] of Object.entries(patterns)) {
-      const safeParse = pattern.safeParse(params[arg]);
-
-      validationResults.push({
+      const baseArgs = {
         arg: params[arg],
         argName: arg,
-        success: safeParse.success,
-        error: safeParse.success ? undefined : safeParse.error,
-      });
+      };
+      const safeParse = pattern.safeParse(params[arg]);
+
+      if (safeParse.success) {
+        validationResults.push({
+          ...baseArgs,
+          status: ZodValidationStatus.Succeed,
+          error: undefined,
+        });
+      } else {
+        validationResults.push({
+          ...baseArgs,
+          status: ZodValidationStatus.Failed,
+          error: safeParse.error,
+        });
+      }
     }
 
     return validationResults;
@@ -39,22 +63,23 @@ class ZodValidator {
 
   validate<T extends ZodAnyDictionary>(
     patterns: T,
-    params: Dictionary<any>
-  ): { success: boolean; messages?: string[] } {
-    const validationResults = this.validateArgs(patterns, params);
-
-    if (!this.hasValidationErrors(validationResults)) {
-      return { success: true };
+    params: Dictionary<any>,
+  ): { success: boolean; errors: ZodValidationResult[] } {
+    const results = this.getValidationResults(patterns, params);
+    if (this.hasErrors(results)) {
+      return {
+        success: false,
+        errors: this.getValidationErrors(results).map(
+          ({ argName, arg, error }) => ({
+            argName,
+            arg,
+            message: this.formatIssues(error!.errors),
+          }),
+        ),
+      };
     }
 
-    const errorMessages = this.filterValidationErrors(validationResults).map(
-      (result) =>
-        `${result.argName} (${result.arg}): ${this.formatErrorMessages(
-          result.error!.errors[0]
-        )}`
-    );
-
-    return { success: false, messages: errorMessages };
+    return { success: true, errors: [] };
   }
 }
 

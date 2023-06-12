@@ -1,11 +1,11 @@
-class ZodValidationError extends Error {
-  readonly eventName: string;
-  readonly errors: string[];
+import { ZodValidationResult } from 'types/Zod';
 
-  constructor(eventName: any, messages: string[]) {
+class ZodValidationError extends Error {
+  constructor(
+    private readonly eventName: any,
+    private readonly errors: ZodValidationResult[],
+  ) {
     super('The argument do not match provided patterns');
-    this.errors = messages;
-    this.eventName = eventName;
   }
 }
 export default ZodValidationError;
