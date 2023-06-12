@@ -4,7 +4,8 @@ import {
   EventParams,
 } from "@/types/Event";
 import { InferZod } from "@/types/Zod";
-import { validateZodPatterns } from "@/zod";
+import ZodValidator from "@/utils/zod";
+import ZodValidationError from "@/errors/ZodValidationError";
 
 class ObserverService<E extends EventDictionary> {
   listeners: EventListenersDictionary<EventDictionary>;
@@ -24,6 +25,21 @@ class ObserverService<E extends EventDictionary> {
     return listeners;
   }
 
+  private validateEventArgs<N extends keyof E>(
+    eventName: N,
+    args: InferZod<EventParams<E[N]>>
+  ) {
+    if (this.listeners[eventName]) {
+      const { args: patterns } = this.listeners[eventName];
+      const result = new ZodValidator().validate(patterns, args);
+
+      if (result.success) {
+        return true;
+      }
+      throw new ZodValidationError(eventName, result.messages);
+    }
+  }
+
   subscribe<N extends keyof E>(
     eventName: N,
     listener: (args: InferZod<EventParams<E[N]>>) => void
@@ -33,16 +49,10 @@ class ObserverService<E extends EventDictionary> {
 
   emit<N extends keyof E>(eventName: N, args: InferZod<EventParams<E[N]>>) {
     if (this.listeners[eventName]) {
-      const { args: patterns, listeners } = this.listeners[eventName];
-      const validated = validateZodPatterns(patterns, args);
-      if (!validated.result) {
-        console.error(
-          `An error occured with Zod validation when tried to emit '${eventName}' event.`,
-          validated.invalid.error
-        );
-      }
-
-      listeners.forEach((listener: (...args: any) => void) => listener(args));
+      this.validateEventArgs(eventName, args);
+      this.listeners[eventName].listeners.forEach(
+        (listener: (...args: any) => void) => listener(args)
+      );
     }
   }
 
