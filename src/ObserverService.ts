@@ -6,12 +6,38 @@ import {
 import { InferZod } from 'types/Zod';
 import ZodValidator from 'utils/zod';
 import ZodValidationError from 'errors/ZodValidationError';
+import Logger from 'utils/Logger';
+import { LoggerLevel } from 'types/Logger';
+
+interface ObserverServiceOptions {
+  /**
+   * In strict mode, when enabled, if the arguments of the emitted event do not conform to the defined pattern,
+   * a ZodValidationError will be thrown, and the event will not be emitted. By default, this option is set to true.
+   */
+  strictCheck?: boolean;
+  /**
+   * Depends on loggerLevel messages of the selected level will be displayed. By default it has LoggerLevel.Error value and all logs are displayed (Info, Warn and Error).
+   */
+  loggerLevel?: LoggerLevel;
+}
+
+const defaultOptions = {
+  strictCheck: true,
+  loggerLevel: LoggerLevel.ERROR,
+};
 
 class ObserverService<E extends EventDictionary> {
+  options: ObserverServiceOptions;
   listeners: EventListenersDictionary<EventDictionary>;
 
-  constructor(events: E) {
+  constructor(events: E, options: ObserverServiceOptions) {
     this.listeners = this.mapEventDictionary(events);
+    this.options = options;
+    this.setup();
+  }
+
+  private setup() {
+    Logger.init(this.options.loggerLevel || defaultOptions.loggerLevel);
   }
 
   private mapEventDictionary(events: E) {
@@ -35,7 +61,13 @@ class ObserverService<E extends EventDictionary> {
       const result = new ZodValidator().validate(patterns, args);
 
       if (!result.success) {
-        throw new ZodValidationError(eventName, result.errors);
+        if (this.options.strictCheck) {
+          throw new ZodValidationError(eventName, result.errors);
+        }
+        Logger.warning(
+          `The provided arguments do not satisfy the defined pattern. Nevertheless, the event has been emitted because strictCheck is set to false.`,
+          result.errors,
+        );
       }
     }
   }
